@@ -48,7 +48,9 @@ class MyApp extends StatelessWidget {
           scaffoldBackgroundColor: mobileBackgroundColor,
         ),
         home: StreamBuilder(
-          stream: FirebaseAuth.instance.authStateChanges(),
+          stream: FirebaseAuth.instance.authStateChanges(), //Firebase Auth enables you to subscribe in realtime to this state via a Stream.
+                                                            //Once called, the stream provides an immediate event of the user's current authentication state,
+                                                            //and then provides subsequent events whenever the authentication state changes.
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.active) {
               if (snapshot.hasData) {

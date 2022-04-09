@@ -7,6 +7,7 @@ import '../utils/global_variables.dart';
 class ResponsiveLayout extends StatefulWidget {
   final Widget webScreenLayout;
   final Widget mobileScreenLayout;
+
   const ResponsiveLayout({
     Key? key,
     required this.webScreenLayout,
@@ -18,7 +19,6 @@ class ResponsiveLayout extends StatefulWidget {
 }
 
 class _ResponsiveLayoutState extends State<ResponsiveLayout> {
-
   @override
   void initState() {
     super.initState();

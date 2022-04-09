@@ -11,9 +11,10 @@ class NewsFeedScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-         backgroundColor: mobileBackgroundColor,
-         centerTitle: false,
-         title: SvgPicture.asset(
+          backgroundColor: mobileBackgroundColor,
+          centerTitle: false,
+          automaticallyImplyLeading: false,
+          title: SvgPicture.asset(
            'assets/ic_instagram.svg',
            color: primaryColor,
            height: 32,
@@ -26,7 +27,10 @@ class NewsFeedScreen extends StatelessWidget {
           ],
         ),
       body: StreamBuilder(
-        stream: FirebaseFirestore.instance.collection('posts').snapshots(),
+        stream: FirebaseFirestore.instance
+          .collection('posts')
+          .orderBy('datePublished', descending: true)
+          .snapshots(),
         builder: (
           context,
           AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> snapshot,

@@ -126,6 +126,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
       : Scaffold(
         appBar: AppBar(
           backgroundColor: mobileBackgroundColor,
+          automaticallyImplyLeading: false,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: clearImage,
@@ -150,6 +151,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
             ),
           ],
         ),
+        // resizeToAvoidBottomInset : false,
         body: Column(
           children: [
             _isLoading
@@ -158,46 +160,61 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 padding: EdgeInsets.only(top: 0)
               ),
             const Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CircleAvatar(
-                  backgroundImage: NetworkImage(user.photoUrl),
-                ),
-
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.45,
-                  child: TextField(
-                    controller: _descriptionController,
-                    decoration: const InputDecoration(
-                      hintText: 'Write a caption...',
-                      border: InputBorder.none,
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  // crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16),
+                          child: CircleAvatar(
+                            backgroundImage: NetworkImage(user.photoUrl),
+                          ),
+                        ),
+                          
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: TextField(
+                              controller: _descriptionController,
+                              decoration: const InputDecoration(
+                                hintText: 'Write a caption...',
+                                border: InputBorder.none,
+                              ),
+                              maxLines: 3,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    maxLines: 8,
-                  ),
-                ),
-
-                SizedBox(
-                  height: 45,
-                  width: 45,
-                  child: AspectRatio(
-                    aspectRatio: 487/451,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: MemoryImage(_file!),
-                          fit: BoxFit.fill,
-                          alignment: FractionalOffset.topCenter,
+                          
+                    SizedBox(
+                      height: MediaQuery.of(context).size.width,
+                      width: MediaQuery.of(context).size.width,
+                      child: Container(
+                        height: double.infinity,
+                        alignment: Alignment.topCenter,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: MemoryImage(_file!),
+                            fit: BoxFit.contain,
+                            alignment: Alignment.topCenter,
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-
-                const Divider(),
-              ],
+              ),
             ),
+            
           ],
         ),
       );

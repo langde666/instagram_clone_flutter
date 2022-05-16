@@ -1,12 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_flutter/models/user.dart';
 import 'package:instagram_flutter/providers/user_provider.dart';
 import 'package:instagram_flutter/resources/firestore_methods.dart';
 import 'package:instagram_flutter/screens/comment_screen.dart';
+import 'package:instagram_flutter/screens/profile_screen.dart';
 import 'package:instagram_flutter/utils/colors.dart';
 import 'package:instagram_flutter/utils/utils.dart';
-import 'package:instagram_flutter/widgets/like_animation.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -22,7 +23,6 @@ class PostCard extends StatefulWidget {
 }
 
 class _PostCardState extends State<PostCard> {
-  bool isLikeAnimating = false;
   int commentLength = 0;
 
   @override
@@ -43,16 +43,33 @@ class _PostCardState extends State<PostCard> {
     } catch (err) {
       showSnackBar(err.toString(), context);
     }
-
     setState(() {});
+  }
+
+  void navigateToComment() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CommentScreen(
+          snap: widget.snap,
+        ),
+      ),
+    );
+  }
+
+  void navigateToProfile() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ProfileScreen(
+          uid: FirebaseAuth.instance.currentUser!.uid == widget.snap['uid'] ? null : widget.snap['uid'],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final User user = Provider.of<UserProvider>(context).getUser;
-
     return Container(
-      color: mobileBackgroundColor,
+      color: backgroundColor,
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         children: [
@@ -62,30 +79,36 @@ class _PostCardState extends State<PostCard> {
             child: Row(
               children: [
                 //avatar
-                CircleAvatar(
-                  radius: 16,
-                  backgroundImage: NetworkImage(widget.snap['profImage']),
+                GestureDetector(
+                  onTap: navigateToProfile,
+                  child: CircleAvatar(
+                        radius: 16,
+                        backgroundImage: NetworkImage(widget.snap['profImage']),
+                      ),
                 ),
-
+                
                 //username
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(left: 8),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.snap['username'],
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
+                    child: GestureDetector(
+                      onTap: navigateToProfile,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.snap['username'],
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
 
                 //more options
-                user.uid == widget.snap['uid'] ? IconButton(
+                FirebaseAuth.instance.currentUser!.uid == widget.snap['uid'] ? IconButton(
                   onPressed: () {
                     showDialog(
                       context: context,
@@ -117,83 +140,44 @@ class _PostCardState extends State<PostCard> {
           ),
 
           //image
-          GestureDetector(
-            onDoubleTap: () async {
-              await FirestoreMethod().likePost(
-                widget.snap['postId'],
-                user.uid,
-                widget.snap['likes'],
-              );
-              setState(() {
-                isLikeAnimating = true;
-              });
-            },
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                SizedBox(
-                  // height: MediaQuery.of(context).size.height*0.35,
-                  width: double.infinity,
-                  child: Image.network(
-                    widget.snap['postUrl'],
-                    fit: BoxFit.cover,
-                  ),
-                ),
-          
-                AnimatedOpacity(
-                  duration: const Duration(milliseconds: 200),
-                  opacity: isLikeAnimating ? 1 : 0,
-                  child: LikeAnimation(
-                    child: const Icon(Icons.favorite, color: Colors.white, size: 90),
-                    isAnimating: isLikeAnimating,
-                    duration: const Duration(milliseconds: 400),
-                    onEnd: () {
-                      setState(() {
-                        isLikeAnimating = false;
-                      });
-                    },
-                  ),
-                ),
-              ],
+          SizedBox(
+            width: double.infinity,
+            child: Image.network(
+              widget.snap['postUrl'],
+              fit: BoxFit.cover,
             ),
           ),
 
-          //likes, comments
+          //like, comment, share & save
           Row(
             children: [
-              LikeAnimation(
-                isAnimating: widget.snap['likes'].contains(user.uid),
-                smallLike: true,
-                child: IconButton(
-                  onPressed: () async {
-                    await FirestoreMethod().likePost(
-                      widget.snap['postId'],
-                      user.uid,
-                      widget.snap['likes'],
-                    );
-                  },
-                  icon: widget.snap['likes'].contains(user.uid)
-                    ? const Icon(Icons.favorite, color: Colors.red)
-                    : const Icon(Icons.favorite_border),
-                ),
+              //like
+              IconButton(
+                onPressed: () async {
+                  await FirestoreMethod().likePost(
+                    widget.snap['postId'],
+                    FirebaseAuth.instance.currentUser!.uid,
+                    widget.snap['likes'],
+                  );
+                },
+                icon: widget.snap['likes'].contains(FirebaseAuth.instance.currentUser!.uid) ?
+                  const Icon(Icons.favorite, color: redColor) :
+                  const Icon(Icons.favorite_border),
               ),
 
+              //comment
               IconButton(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => CommentScreen(
-                      snap: widget.snap,
-                    ),
-                  ),
-                ),
+                onPressed: navigateToComment,
                 icon: const Icon(Icons.comment_outlined),
               ),
 
+              //share
               IconButton(
                 onPressed: () {},
                 icon: const Icon(Icons.send),
               ),
 
+              //save
               Expanded(
                 child: Align(
                   alignment: Alignment.bottomRight,
@@ -206,21 +190,17 @@ class _PostCardState extends State<PostCard> {
             ],
           ),
 
+          //number of likes, comments
+          //description, published date
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                DefaultTextStyle(
-                  style: Theme.of(context).textTheme.subtitle2!.copyWith(fontWeight: FontWeight.w800),
-                  child: Text(
-                    '${widget.snap['likes'].length} likes',
-                    style: Theme.of(context).textTheme.bodyText2,
-                  ),
-                ),
+                //number of likes
+                Text('${widget.snap['likes'].length} likes'),
 
-                //caption
+                //description (caption)
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.only(top: 8),
@@ -232,9 +212,7 @@ class _PostCardState extends State<PostCard> {
                           text: widget.snap['username'],
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-
                         const TextSpan(text: ' '),
-
                         TextSpan(text: widget.snap['description']),
                       ],
                     )
@@ -242,7 +220,7 @@ class _PostCardState extends State<PostCard> {
                 ),
 
                 InkWell(
-                  onTap: () {},
+                  onTap: navigateToComment,
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Text(

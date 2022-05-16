@@ -110,27 +110,27 @@ class _LoginScreenState extends State<LoginScreen> {
                   InkWell(
                     onTap: loginUser,
                     child: Container(
-                      child: _isLoading 
-                        ? const Center(
+                      width: double.infinity,
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: _isLoading ?
+                        const Center(
                             child: CircularProgressIndicator(
                               color: primaryColor,
                             ),
-                          )
-                        : const Text('Log in'),
-                      width: double.infinity,
-                      alignment: Alignment.center,
-                      padding: const EdgeInsets.symmetric(vertical: 12,),
+                          ) :
+                        const Text('Log in'),
                       decoration: const ShapeDecoration(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(4),)
+                          borderRadius: BorderRadius.all(Radius.circular(4))
                         ),
                         color: blueColor,
                       ),
                     ),
                   ),
                   
-                  const SizedBox(height: 12,),
-                  Flexible(child: Container(),flex: 2,),
+                  const SizedBox(height: 12),
+                  Flexible(child: Container(),flex: 2),
                   
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -149,7 +149,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  
                 ],
               ),
             ),

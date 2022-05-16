@@ -1,13 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_flutter/models/user.dart';
 import 'package:instagram_flutter/providers/user_provider.dart';
 import 'package:instagram_flutter/resources/firestore_methods.dart';
+import 'package:instagram_flutter/screens/profile_screen.dart';
 import 'package:instagram_flutter/utils/colors.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
-import '../widgets/comment_card.dart';
+import 'package:instagram_flutter/widgets/comment_card.dart';
 
 class CommentScreen extends StatefulWidget {
   final snap;
@@ -31,23 +32,37 @@ class _CommentScreenState extends State<CommentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final User user = Provider.of<UserProvider>(context).getUser;
+    final user = Provider.of<UserProvider>(context).getUser;
+
+    void navigateToProfile() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ProfileScreen(
+          uid: FirebaseAuth.instance.currentUser!.uid == widget.snap['uid'] ? null : widget.snap['uid'],
+        ),
+      ),
+    );
+  }
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: mobileBackgroundColor,
+        backgroundColor: backgroundColor,
         title: const Text('Comments'),
         centerTitle: false,
       ),
       body: Column(
         children: [
+          //description (caption)
           Container(
             padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 16.0),
             child: Row(
               children: [
-                CircleAvatar(
-                  backgroundImage: NetworkImage(widget.snap['profImage']),
-                  radius: 18,
+                GestureDetector(
+                  onTap: navigateToProfile,
+                  child: CircleAvatar(
+                    backgroundImage: NetworkImage(widget.snap['profImage']),
+                    radius: 18,
+                  ),
                 ),
 
                 Expanded(
@@ -57,20 +72,23 @@ class _CommentScreenState extends State<CommentScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        RichText(
-                          text: TextSpan(
-                            children: [
-                              TextSpan(
-                                text: widget.snap['username'],
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              const TextSpan(
-                                text: ' ',
-                              ),
-                              TextSpan(
-                                text: widget.snap['description'],
-                              ),
-                            ],
+                        GestureDetector(
+                          onTap: navigateToProfile,
+                          child: RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: widget.snap['username'],
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                const TextSpan(
+                                  text: ' ',
+                                ),
+                                TextSpan(
+                                  text: widget.snap['description'],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         
@@ -97,7 +115,7 @@ class _CommentScreenState extends State<CommentScreen> {
           const Divider(
             height: 1,
             thickness: 1,
-            color: Colors.white60,
+            color: secondaryColor,
           ),
 
           Flexible(
@@ -126,57 +144,56 @@ class _CommentScreenState extends State<CommentScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          height: kToolbarHeight,
-          margin: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-          padding: const EdgeInsets.only(left: 16, right: 8),
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundImage: NetworkImage(user.photoUrl),
-                radius: 18,
-              ),
+      //comment input
+      bottomNavigationBar: Container(
+        height: 56.0,
+        margin: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundImage: NetworkImage(user.photoUrl),
+              radius: 18,
+            ),
 
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 16.0, right: 8.0),
-                  child: TextField(
-                    controller: _commentController,
-                    decoration: InputDecoration(
-                      hintText: 'Comment as ${user.username}',
-                      border: InputBorder.none,
-                    ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  controller: _commentController,
+                  decoration: InputDecoration(
+                    hintText: 'Comment as ${user.username}',
+                    border: InputBorder.none,
                   ),
                 ),
               ),
+            ),
 
-              InkWell(
-                onTap: () async {
-                  await FirestoreMethod().postComment(
-                    widget.snap['postId'],
-                    _commentController.text,
-                    user.uid,
-                    user.username,
-                    user.photoUrl,
-                  );
+            InkWell(
+              onTap: () async {
+                await FirestoreMethod().postComment(
+                  widget.snap['postId'],
+                  _commentController.text,
+                  user.uid,
+                  user.username,
+                  user.photoUrl,
+                );
 
-                  setState(() {
-                    _commentController.text = "";
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8.0),
-                  child: const Text(
-                    'Post',
-                    style: TextStyle(
-                      color: blueColor,
-                    ),
+                setState(() {
+                  _commentController.text = "";
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.all(8.0),
+                child: const Text(
+                  'Post',
+                  style: TextStyle(
+                    color: blueColor,
                   ),
                 ),
-              )
-            ],
-          ),
+              ),
+            )
+          ],
         ),
       ),
     );

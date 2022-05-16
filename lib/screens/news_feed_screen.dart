@@ -11,18 +11,19 @@ class NewsFeedScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          backgroundColor: mobileBackgroundColor,
+          backgroundColor: backgroundColor,
           centerTitle: false,
-          automaticallyImplyLeading: false,
+          //logo
           title: SvgPicture.asset(
-           'assets/ic_instagram.svg',
-           color: primaryColor,
-           height: 32,
+            'assets/ic_instagram.svg',
+            color: primaryColor,
+            height: 32,
           ),
+          //messenger
           actions: [
             IconButton(
-              onPressed: () {},
               icon: const Icon(Icons.chat),
+              onPressed: () {},
             ),
           ],
         ),

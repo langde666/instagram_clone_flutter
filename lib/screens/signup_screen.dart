@@ -68,7 +68,7 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void navigateToLogin() {
-    Navigator.of(context).push(
+    Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (context) => const LoginScreen(),
       ),
@@ -109,9 +109,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         )
                       : const CircleAvatar(
                           radius: 64,
-                          backgroundImage: NetworkImage(
-                            'https://t4.ftcdn.net/jpg/00/64/67/63/360_F_64676383_LdbmhiNM6Ypzb3FM4PPuFP9rHe7ri8Ju.jpg',
-                          ),
+                          backgroundImage: AssetImage('assets/placeholder.jpg'),
                         ),
           
                       Positioned(

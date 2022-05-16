@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:instagram_flutter/screens/profile_screen.dart';
 import 'package:intl/intl.dart';
 
 class CommentCard extends StatefulWidget {
@@ -13,15 +15,29 @@ class CommentCard extends StatefulWidget {
 }
 
 class _CommentCardState extends State<CommentCard> {
+
+  void navigateToProfile() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ProfileScreen(
+          uid: FirebaseAuth.instance.currentUser!.uid == widget.snap['uid'] ? null : widget.snap['uid'],
+        ),
+      ),
+    );
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 16.0),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundImage: NetworkImage(widget.snap['profilePic']),
-            radius: 18,
+          GestureDetector(
+            onTap: navigateToProfile,
+            child: CircleAvatar(
+              backgroundImage: NetworkImage(widget.snap['profilePic']),
+              radius: 18,
+            ),
           ),
 
           Expanded(
@@ -31,20 +47,23 @@ class _CommentCardState extends State<CommentCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: widget.snap['name'],
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const TextSpan(
-                          text: ' ',
-                        ),
-                        TextSpan(
-                          text: widget.snap['text'],
-                        ),
-                      ],
+                 GestureDetector(
+                    onTap: navigateToProfile,
+                    child: RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: widget.snap['name'],
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const TextSpan(
+                            text: ' ',
+                          ),
+                          TextSpan(
+                            text: widget.snap['text'],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   

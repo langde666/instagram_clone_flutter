@@ -116,17 +116,16 @@ class _AddPostScreenState extends State<AddPostScreen> {
   Widget build(BuildContext context) {
     final User user = Provider.of<UserProvider>(context).getUser;
 
-    return _file == null
-      ? Center(
+    return _file == null ?
+      Center(
         child: IconButton(
-          icon: const Icon(Icons.upload),
+          icon: const Icon(Icons.upload, size: 32.0),
           onPressed: () => _selectImage(context),
         ),
-      )
-      : Scaffold(
+      ) :
+      Scaffold(
         appBar: AppBar(
-          backgroundColor: mobileBackgroundColor,
-          automaticallyImplyLeading: false,
+          backgroundColor: backgroundColor,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: clearImage,
@@ -143,7 +142,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
               child: const Text(
                 'Post',
                 style: TextStyle(
-                  color: Colors.blueAccent,
+                  color: blueColor,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -154,18 +153,19 @@ class _AddPostScreenState extends State<AddPostScreen> {
         // resizeToAvoidBottomInset : false,
         body: Column(
           children: [
-            _isLoading
-            ? const LinearProgressIndicator()
-            : const Padding(
+            _isLoading ?
+              const LinearProgressIndicator() :
+              const Padding(
                 padding: EdgeInsets.only(top: 0)
               ),
+
             const Divider(),
+
             Expanded(
               child: SingleChildScrollView(
                 scrollDirection: Axis.vertical,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
-                  // crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(

@@ -99,6 +99,31 @@ class FirestoreMethod {
     }
   }
 
+  //save post
+  Future<void> savePost(
+    String uid,
+    String postId,
+
+  ) async {
+    try {
+      DocumentSnapshot snap = await _firestore.collection('users').doc(uid).get();
+      List saved = (snap.data()! as dynamic)['saved'];
+      
+      if (saved.contains(postId)) {
+        await _firestore.collection('users').doc(uid).update({
+          'saved': FieldValue.arrayRemove([postId]),
+        });
+      }
+      else {
+        await _firestore.collection('users').doc(uid).update({
+          'saved': FieldValue.arrayUnion([postId]),
+        });
+      }
+    } catch (err) {
+      print(err.toString());
+    }
+  }
+
   //follow user
   Future<void> followUser(
     String uid,
@@ -125,6 +150,38 @@ class FirestoreMethod {
 
         await _firestore.collection('users').doc(uid).update({
           'following': FieldValue.arrayUnion([followId]),
+        });
+      }
+    } catch (err) {
+      print(err.toString());
+    }
+  }
+
+  //block user
+  Future<void> blockUser(
+    String uid,
+    String blockId,
+  ) async {
+    try {
+      DocumentSnapshot snap = await _firestore.collection('users').doc(uid).get();
+      List blocking = (snap.data()! as dynamic)['blocking'];
+
+      if (blocking.contains(blockId)) {
+        await _firestore.collection('users').doc(blockId).update({
+          'blockers': FieldValue.arrayRemove([uid]),
+        });
+
+        await _firestore.collection('users').doc(uid).update({
+          'blocking': FieldValue.arrayRemove([blockId]),
+        });
+      }
+      else {
+        await _firestore.collection('users').doc(blockId).update({
+          'blockers': FieldValue.arrayUnion([uid]),
+        });
+
+        await _firestore.collection('users').doc(uid).update({
+          'blocking': FieldValue.arrayUnion([blockId]),
         });
       }
     } catch (err) {

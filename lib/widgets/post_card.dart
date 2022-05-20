@@ -1,15 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_flutter/models/user.dart';
-import 'package:instagram_flutter/providers/user_provider.dart';
 import 'package:instagram_flutter/resources/firestore_methods.dart';
 import 'package:instagram_flutter/screens/comment_screen.dart';
 import 'package:instagram_flutter/screens/profile_screen.dart';
 import 'package:instagram_flutter/utils/colors.dart';
 import 'package:instagram_flutter/utils/utils.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
 class PostCard extends StatefulWidget {
   final snap;
@@ -24,14 +21,15 @@ class PostCard extends StatefulWidget {
 
 class _PostCardState extends State<PostCard> {
   int commentLength = 0;
+  bool isSaved = false;
 
   @override
   void initState() {
     super.initState();
-    getComments();
+    getStates();
   }
 
-  void getComments() async {
+  void getStates() async {
     try {
       QuerySnapshot snapshot = await FirebaseFirestore.instance
       .collection('posts')
@@ -39,11 +37,18 @@ class _PostCardState extends State<PostCard> {
       .collection('comments')
       .get();
 
-      commentLength = snapshot.docs.length;
+      DocumentSnapshot snapshot1 = await FirebaseFirestore.instance
+      .collection('users')
+      .doc(FirebaseAuth.instance.currentUser!.uid)
+      .get();
+
+      setState(() {
+        commentLength = snapshot.docs.length;
+        isSaved = (snapshot1.data()! as dynamic)['saved'].contains(widget.snap['postId']);
+      });
     } catch (err) {
       showSnackBar(err.toString(), context);
     }
-    setState(() {});
   }
 
   void navigateToComment() {
@@ -172,18 +177,23 @@ class _PostCardState extends State<PostCard> {
               ),
 
               //share
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.send),
-              ),
+              // IconButton(
+              //   onPressed: () {},
+              //   icon: const Icon(Icons.send),
+              // ),
 
               //save
               Expanded(
                 child: Align(
                   alignment: Alignment.bottomRight,
                   child: IconButton(
-                    onPressed: () {},
-                    icon: const Icon(Icons.bookmark_border),
+                    onPressed: () async {
+                      await FirestoreMethod().savePost(FirebaseAuth.instance.currentUser!.uid, widget.snap['postId']);
+                      setState(() {
+                        isSaved = !isSaved;
+                      });
+                    },
+                    icon: isSaved ? const Icon(Icons.bookmark_rounded) : const Icon(Icons.bookmark_border),
                   ),
                 ),
               ),

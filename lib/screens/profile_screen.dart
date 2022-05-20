@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_flutter/resources/auth_methods.dart';
 import 'package:instagram_flutter/resources/firestore_methods.dart';
+import 'package:instagram_flutter/screens/blocked_screen.dart';
+import 'package:instagram_flutter/screens/follower_screen.dart';
 import 'package:instagram_flutter/screens/login_screen.dart';
 import 'package:instagram_flutter/screens/post_screen.dart';
 import 'package:instagram_flutter/utils/colors.dart';
@@ -22,7 +24,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int postLength = 0;
   int followers = 0;
   int following = 0;
+  int blocking = 0;
   bool isFollowing = false;
+  bool isBlocking = false;
+  bool isBlocked = false;
   bool isLoading = true;
 
   @override
@@ -35,11 +40,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       isLoading = true;
     });
-    String _uid = widget.uid ?? FirebaseAuth.instance.currentUser!.uid;
     try {
       var userSnap = await FirebaseFirestore.instance
         .collection('users')
-        .doc(_uid)
+        .doc(widget.uid ?? FirebaseAuth.instance.currentUser!.uid)
         .get();
       
       var postSnap = await FirebaseFirestore.instance
@@ -50,7 +54,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       userData = userSnap.data()!;
       followers = userSnap.data()!['followers'].length;
       following = userSnap.data()!['following'].length;
+      blocking = userSnap.data()!['blocking'].length;
       isFollowing = userSnap.data()!['followers'].contains(FirebaseAuth.instance.currentUser!.uid);
+      isBlocking = userSnap.data()!['blockers'].contains(FirebaseAuth.instance.currentUser!.uid);
+      isBlocked = userSnap.data()!['blocking'].contains(FirebaseAuth.instance.currentUser!.uid);
       postLength = postSnap.docs.length;
 
       setState(() {
@@ -74,6 +81,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void navigateToFollowScreen(name, field) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => FollowScreen(
+          user: userData,
+          name: name,
+          field: field,
+        ),
+      ),
+    );
+  }
+
+  void navigateToBlockedScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BlockedScreen(
+          user: userData,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return isLoading == true ?
@@ -85,7 +114,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           backgroundColor: backgroundColor,
           centerTitle: false,
           //username
-          title: Text(userData['username']),
+          title: Text(isBlocked ? 'Instagram user' : userData['username']),
           //edit profile
           // actions: [
           //   IconButton(
@@ -94,7 +123,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           //   ),
           // ],
         ),
-        body: ListView(
+        body: isBlocked ?
+        const Center(
+          child: Text("You're blocked"),
+        ) :
+        ListView(
           children: [
             Padding(
               padding: const EdgeInsets.all(16),
@@ -146,51 +179,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
 
                                 //followers
-                                Column(
-                                  children: [
-                                    Text(
-                                      followers.toString(),
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-
-                                    Container(
-                                      margin: const EdgeInsets.only(top: 4),
-                                      child: const Text(
-                                        'followers',
-                                        style: TextStyle(
-                                          fontSize: 15,
-                                          color: Colors.grey,
+                                GestureDetector(
+                                  onTap: () => navigateToFollowScreen('Followers', 'followers'),
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        followers.toString(),
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                
+                                      Container(
+                                        margin: const EdgeInsets.only(top: 4),
+                                        child: const Text(
+                                          'followers',
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
 
                                 //following
-                                Column(
-                                  children: [
-                                    Text(
-                                      following.toString(),
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-
-                                    Container(
-                                      margin: const EdgeInsets.only(top: 4),
-                                      child: const Text(
-                                        'following',
-                                        style: TextStyle(
-                                          fontSize: 15,
-                                          color: Colors.grey,
+                                GestureDetector(
+                                  onTap: () => navigateToFollowScreen('Following', 'following'),
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        following.toString(),
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                
+                                      Container(
+                                        margin: const EdgeInsets.only(top: 4),
+                                        child: const Text(
+                                          'following',
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -198,54 +237,84 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             //button
                             widget.uid == null ?
                               //sign out
-                              CustomButton(
-                                text: 'Sign out',
-                                textColor: primaryColor,
-                                backgroundColor: backgroundColor,
-                                borderColor: secondaryColor,
-                                function: () async {
-                                  await AuthMethods().signOut();
-                                  Navigator.of(context).pushReplacement(
-                                    MaterialPageRoute(builder: (context) => const LoginScreen()),
-                                  );
-                                },
+                              Column(
+                                children: [
+                                  CustomButton(
+                                    text: 'Sign out',
+                                    textColor: primaryColor,
+                                    backgroundColor: backgroundColor,
+                                    borderColor: secondaryColor,
+                                    function: () async {
+                                      await AuthMethods().signOut();
+                                      Navigator.of(context).pushReplacement(
+                                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                                      );
+                                    },
+                                  ),
+
+                                  InkWell(
+                                    onTap: navigateToBlockedScreen,
+                                    child: Text(
+                                      'Blocked $blocking users',
+                                      style: const TextStyle(fontSize: 14, color: secondaryColor),
+                                    ),
+                                  ),
+                                ],
                               ) :
                               //follow, unfollow
-                              isFollowing ?
-                                CustomButton(
-                                  text: 'Unfollow',
-                                  textColor: backgroundColor,
-                                  backgroundColor: primaryColor,
-                                  borderColor: secondaryColor,
-                                  function: () async {
-                                    await FirestoreMethod().followUser(
-                                      FirebaseAuth.instance.currentUser!.uid,
-                                      userData['uid'],
-                                    );
-
-                                    setState(() {
-                                      isFollowing = !isFollowing;
-                                      followers--;
-                                    });
-                                  },
-                                ) : 
-                                CustomButton(
-                                  text: 'Follow',
-                                  textColor: primaryColor,
-                                  backgroundColor: blueColor,
-                                  borderColor: blueColor,
-                                  function: () async {
-                                    await FirestoreMethod().followUser(
-                                      FirebaseAuth.instance.currentUser!.uid,
-                                      userData['uid'],
-                                    );
-
-                                    setState(() {
-                                      isFollowing = !isFollowing;
-                                      followers++;
-                                    });
-                                  },
-                                ),
+                              Column(
+                                children: [
+                                  isFollowing ?
+                                    CustomButton(
+                                      text: 'Unfollow',
+                                      textColor: backgroundColor,
+                                      backgroundColor: primaryColor,
+                                      borderColor: secondaryColor,
+                                      function: () async {
+                                        await FirestoreMethod().followUser(
+                                          FirebaseAuth.instance.currentUser!.uid,
+                                          userData['uid'],
+                                        );
+                                        setState(() {
+                                          isFollowing = !isFollowing;
+                                          followers--;
+                                        });
+                                      },
+                                    ) : 
+                                    CustomButton(
+                                      text: 'Follow',
+                                      textColor: primaryColor,
+                                      backgroundColor: blueColor,
+                                      borderColor: blueColor,
+                                      function: () async {
+                                        await FirestoreMethod().followUser(
+                                          FirebaseAuth.instance.currentUser!.uid,
+                                          userData['uid'],
+                                        );
+                                        setState(() {
+                                          isFollowing = !isFollowing;
+                                          followers++;
+                                        });
+                                      },
+                                    ),
+                                  
+                                  InkWell(
+                                    onTap: () async {
+                                      await FirestoreMethod().blockUser(
+                                        FirebaseAuth.instance.currentUser!.uid,
+                                        userData['uid'],
+                                      );
+                                      setState(() {
+                                        isBlocking = !isBlocking;
+                                      });
+                                    },
+                                    child: Text(
+                                      isBlocking ? 'Unblock' : 'Block',
+                                      style: const TextStyle(fontSize: 14, color: redColor),
+                                    ),
+                                  )
+                                ],
+                              ),
                           ],
                         ),
                       ),
